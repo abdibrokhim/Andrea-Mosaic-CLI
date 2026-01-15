@@ -3,7 +3,7 @@ use crate::app::traits::{CatalogStore, ImageIo};
 use crate::domain::{Catalog, MosaicResult, MosaicSpec, TilesSource, Tile};
 use crate::error::{AppError, AppResult};
 use image::{imageops, DynamicImage, GenericImageView, RgbImage};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use walkdir::WalkDir;
 
 struct TileImage {
@@ -50,7 +50,7 @@ pub fn generate_mosaic<C: CatalogStore, I: ImageIo>(
             let x = tile_x * spec.tile_size;
             let y = tile_y * spec.tile_size;
             let region = input.view(x, y, spec.tile_size, spec.tile_size).to_image();
-            let region_img = DynamicImage::ImageRgb8(region);
+            let region_img = DynamicImage::ImageRgba8(region);
             let region_avg = average_color(&region_img);
 
             let best_tile = tiles
@@ -104,7 +104,7 @@ fn build_tiles_from_dir<I: ImageIo>(
         if entry_path.is_file() && is_image_path(entry_path) {
             let image = image_io.read(entry_path)?;
             let avg_color = average_color(&image);
-            let resized = imageops::resize(&image, tile_size, tile_size, imageops::FilterType::Triangle);
+            let resized = image.resize_exact(tile_size, tile_size, imageops::FilterType::Triangle);
             tiles.push(TileImage {
                 avg_color,
                 image: resized.to_rgb8(),
@@ -121,7 +121,7 @@ fn load_tile_image<I: ImageIo>(
     tile_size: u32,
 ) -> AppResult<TileImage> {
     let image = image_io.read(&tile.path)?;
-    let resized = imageops::resize(&image, tile_size, tile_size, imageops::FilterType::Triangle);
+    let resized = image.resize_exact(tile_size, tile_size, imageops::FilterType::Triangle);
     Ok(TileImage {
         avg_color: tile.avg_color,
         image: resized.to_rgb8(),
