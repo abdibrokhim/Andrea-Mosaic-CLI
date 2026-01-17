@@ -4,6 +4,7 @@ mod config;
 mod domain;
 mod error;
 mod infra;
+mod ui;
 
 use crate::cli::{CatalogCommands, Commands, GenerateArgs};
 use crate::domain::{MosaicSpec, TilesSource};
@@ -31,7 +32,10 @@ fn main() -> anyhow::Result<()> {
     );
 
     match cli.command {
-        Commands::Catalog { command } => match command {
+        None => {
+            ui::run_tui(app, default_tile_size)?;
+        }
+        Some(Commands::Catalog { command }) => match command {
             CatalogCommands::Add { path } => {
                 let added = app.catalog_add(&path)?;
                 cli::print_catalog_add(&added);
@@ -45,7 +49,7 @@ fn main() -> anyhow::Result<()> {
                 cli::print_catalog_remove(&removed);
             }
         },
-        Commands::Generate(args) => {
+        Some(Commands::Generate(args)) => {
             let generate_config = file_config.generate.clone().unwrap_or_default();
             let spec = build_mosaic_spec(args, generate_config, default_tile_size)?;
             let result = app.generate_mosaic(&spec)?;

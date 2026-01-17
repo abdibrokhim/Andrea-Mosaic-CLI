@@ -12,7 +12,7 @@ pub struct Cli {
     #[arg(long)]
     pub default_tile_size: Option<u32>,
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
